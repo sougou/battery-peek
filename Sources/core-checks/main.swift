@@ -94,7 +94,31 @@ do {
     check(Weather.formatTemp(-0.2, unit: .celsius) == "0°C", "negative zero")
     check(Weather.formatWind(19, unit: .celsius) == "19 km/h" && Weather.formatWind(19, unit: .fahrenheit) == "12 mph", "wind format")
     check(Weather.compass(0) == "N" && Weather.compass(315) == "NW" && Weather.compass(359) == "N" && Weather.compass(-45) == "NW" && Weather.compass(nil) == "", "compass")
+    // Hourly forecast: unixtime, nulls tolerated, next-hours selection, hour formatting.
+    let hourlyJSON = """
+    {"utc_offset_seconds":-25200,
+     "current":{"temperature_2m":18.5,"weather_code":3,"is_day":1,"precipitation":0.4},
+     "hourly":{"time":[1000000,1003600,1007200,1010800,1014400,1018000,1021600],
+       "temperature_2m":[18,19.4,null,21,20,18,16],
+       "precipitation_probability":[0,10,20,null,60,70,80],
+       "weather_code":[1,2,3,61,63,3,0],
+       "is_day":[1,1,1,0,0,0,0]}}
+    """
+    let hr = Weather.parse(Data(hourlyJSON.utf8))
+    check(hr?.precipMm == 0.4 && hr?.utcOffsetSeconds == -25200, "precipitation and offset")
+    check(hr?.hours?.count == 6, "hour with a null temperature is skipped")
+    check(hr?.hours?.first == HourForecast(time: Date(timeIntervalSince1970: 1000000), tempC: 18, precipChance: 0, code: 1, isDay: true), "first hour")
+    check(hr?.hours?[2].precipChance == nil && hr?.hours?[2].code == 61 && hr?.hours?[2].isDay == false, "null chance and night flag")
+    let next = hr.map { Weather.nextHours($0, after: Date(timeIntervalSince1970: 1000000 + 1800), count: 4) } ?? []
+    check(next.map(\.time.timeIntervalSince1970) == [1003600, 1010800, 1014400, 1018000], "next four hours after now, skipping the current one")
+    check(hr.map { Weather.nextHours($0, after: Date(timeIntervalSince1970: 1018000), count: 4).count } == 1, "fewer than four left")
+    check(Weather.parse(Data(#"{"current":{"temperature_2m":5,"weather_code":0}}"#.utf8))?.hours == nil, "no hourly block")
+    check(Weather.formatPrecip(0, unit: .celsius) == "None" && Weather.formatPrecip(0.04, unit: .celsius) == "None", "no precipitation")
+    check(Weather.formatPrecip(0.4, unit: .celsius) == "0.4 mm" && Weather.formatPrecip(2.54, unit: .fahrenheit) == "0.10 in", "precipitation units")
+    let h = Weather.formatHour(Date(timeIntervalSince1970: 1_700_000_000), utcOffsetSeconds: 0)
+    check(h.contains("10") || h.contains("22"), "hour label in the place's zone (2023-11-14 22:13 UTC)")
     let url = Weather.url(for: Place(name: "x", latitude: 40.712812, longitude: -74.006015)).absoluteString
+    check(url.contains("hourly=") && url.contains("forecast_hours=7") && url.contains("timeformat=unixtime"), "hourly request")
     check(url.hasPrefix("https://api.open-meteo.com/") && url.contains("latitude=40.71&longitude=-74.01"), "rounded coordinates in the request")
 }
 

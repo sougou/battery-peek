@@ -14,7 +14,10 @@ final class PopupController {
     private var cancellable: AnyCancellable?
     private var failsafe: Timer?
 
+    private let makeRoot: () -> PopupView
+
     init(store: BatteryStore, weather: WeatherStore) {
+        makeRoot = { PopupView(store: store, weather: weather) }
         hosting = NSHostingView(rootView: PopupView(store: store, weather: weather))
         hosting.translatesAutoresizingMaskIntoConstraints = false
 
@@ -62,6 +65,7 @@ final class PopupController {
     }
 
     func show(autoHideAfter seconds: TimeInterval = 30) {
+        hosting.rootView = makeRoot() // re-evaluates "next hours" against the current time
         layoutAndCenter()
         panel.alphaValue = 0
         panel.orderFrontRegardless()

@@ -10,7 +10,7 @@ struct PopupView: View {
         HStack(alignment: .top, spacing: 0) {
             if let reading = weather.reading {
                 WeatherPanel(reading: reading, place: weather.placeName, unit: weather.unit)
-                    .frame(width: 210, alignment: .leading)
+                    .frame(width: 250, alignment: .leading)
                     .padding(.trailing, 20)
                 Divider()
                     .padding(.trailing, 20)
@@ -59,6 +59,7 @@ private struct WeatherPanel: View {
     private var rows: [(String, String)] {
         var rows: [(String, String)] = []
         if let feels = reading.feelsC { rows.append(("Feels like", Weather.formatTemp(feels, unit: unit))) }
+        if let precip = reading.precipMm { rows.append(("Precip.", Weather.formatPrecip(precip, unit: unit))) }
         if let wind = reading.windKmh {
             rows.append(("Wind", "\(Weather.formatWind(wind, unit: unit)) \(Weather.compass(reading.windDeg))"
                 .trimmingCharacters(in: .whitespaces)))
@@ -73,12 +74,17 @@ private struct WeatherPanel: View {
         VStack(alignment: .leading, spacing: 8) {
             SectionLabel(place?.uppercased() ?? "WEATHER")
                 .lineLimit(1)
-            Text(Weather.formatTemp(reading.tempC, unit: unit))
-                .font(.system(size: 46, weight: .light, design: .monospaced))
-                .minimumScaleFactor(0.7)
-                .lineLimit(1)
-            Label(d.label, systemImage: d.symbol)
-                .font(.system(size: 13))
+            HStack(alignment: .center, spacing: 12) {
+                Text(Weather.formatTemp(reading.tempC, unit: unit))
+                    .font(.system(size: 46, weight: .light, design: .monospaced))
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
+                Image(systemName: d.symbol)
+                    .symbolRenderingMode(.multicolor)
+                    .font(.system(size: 34))
+            }
+            Text(d.label)
+                .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(Color.accentColor)
             Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 5) {
                 ForEach(rows, id: \.0) { row in
@@ -93,6 +99,45 @@ private struct WeatherPanel: View {
                 }
             }
             .padding(.top, 4)
+            HourStrip(hours: Weather.nextHours(reading), offset: reading.utcOffsetSeconds, unit: unit)
+        }
+    }
+}
+
+/// The next few hours: time, condition icon, temperature, and chance of rain.
+private struct HourStrip: View {
+    let hours: [HourForecast]
+    let offset: Int?
+    let unit: TempUnit
+
+    var body: some View {
+        if !hours.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Divider().padding(.top, 6)
+                SectionLabel("NEXT HOURS")
+                HStack(alignment: .top, spacing: 0) {
+                    ForEach(hours, id: \.time) { hour in
+                        VStack(spacing: 4) {
+                            Text(Weather.formatHour(hour.time, utcOffsetSeconds: offset))
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundStyle(.secondary)
+                            Image(systemName: Weather.describe(code: hour.code, isDay: hour.isDay).symbol)
+                                .symbolRenderingMode(.multicolor)
+                                .font(.system(size: 16))
+                                .frame(height: 20)
+                            Text(Weather.formatTemp(hour.tempC, unit: unit).replacingOccurrences(of: "°\(unit.rawValue)", with: "°"))
+                                .font(.system(size: 13, design: .monospaced))
+                            HStack(spacing: 2) {
+                                Image(systemName: "drop.fill").font(.system(size: 7))
+                                Text(hour.precipChance.map { "\($0)%" } ?? "–")
+                                    .font(.system(size: 10, design: .monospaced))
+                            }
+                            .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+            }
         }
     }
 }

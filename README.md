@@ -8,8 +8,9 @@ takes no focus, so the app you were typing in stays active.
 
 It shows:
 
-- **Weather**, on the left: temperature, conditions, feels-like, wind, humidity, and cloud
-  cover.
+- **Weather**, on the left: temperature with a condition icon (clear, cloudy, rain, snow,
+  and so on), feels-like, current precipitation, wind, humidity, and cloud cover, then the
+  next four hours with temperature, a condition icon, and the chance of rain.
 - **This Mac**, with charging state and time remaining.
 - **Bluetooth devices**: AirPods (buds and case), Magic Keyboard, mouse, trackpad.
 - **Logitech devices on a Bolt or Unifying receiver**, read live over HID++, so
@@ -65,7 +66,8 @@ Restart the app after changing it (`killall Peekaboo`, then reopen it, or log ou
 - The popup is a borderless, non-activating panel that ignores the mouse.
 - **Weather:** [Open-Meteo](https://open-meteo.com)'s free forecast API (no key) for the
   place from your config, or else an approximate location from your IP address. The
-  reading is cached for 30 minutes and the IP lookup for 24 hours, in
+  reading (the current conditions and the next hours, from one request) is cached for 30
+  minutes and the IP lookup for 24 hours, in
   `~/Library/Caches/peekaboo/weather.json`, so opening the popup never waits on the
   network. If a request fails, the weather panel just doesn't show.
 - **Mac:** the power-source API (IOKit).
