@@ -79,3 +79,7 @@ The command-line Swift tools don't include XCTest or the Swift Testing macros, s
   a level).
 - The app is signed ad hoc, so macOS may ask you to allow it again after you rebuild.
 - Tested on macOS 27 with an MX Master 3S and a Signature Slim Solar+ on a Bolt receiver.
+
+## License
+
+Licensed under the [Apache License, Version 2.0](LICENSE).
