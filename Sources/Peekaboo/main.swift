@@ -37,6 +37,35 @@ let args = CommandLine.arguments
     }
 }
 
+// `--snapshot-icons out.png` renders every weather icon with its label, to check the colors.
+@MainActor func snapshotIcons(to path: String) {
+    let samples: [(Int, Bool)] = [(0, true), (0, false), (1, true), (1, false), (3, true), (45, true),
+                                  (51, true), (63, true), (73, true), (95, true)]
+    let view = HStack(spacing: 18) {
+        ForEach(samples.indices, id: \.self) { i in
+            let d = Weather.describe(code: samples[i].0, isDay: samples[i].1)
+            VStack(spacing: 6) {
+                WeatherIcon(symbol: d.symbol, size: 34)
+                Text(d.label).font(.system(size: 10)).foregroundStyle(.secondary)
+            }
+        }
+    }
+    .padding(18)
+    .background(Color(nsColor: .windowBackgroundColor))
+    let renderer = ImageRenderer(content: view)
+    renderer.scale = 2
+    if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
+       let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
+        try? png.write(to: URL(fileURLWithPath: path))
+        print("wrote \(path)")
+    }
+}
+
+if let at = args.firstIndex(of: "--snapshot-icons"), at + 1 < args.count {
+    MainActor.assumeIsolated { snapshotIcons(to: args[at + 1]) }
+    exit(0)
+}
+
 if args.contains("--list") || args.contains("--snapshot") {
     MainActor.assumeIsolated { runDebug() }
     exit(0)

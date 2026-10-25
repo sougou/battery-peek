@@ -88,7 +88,7 @@ do {
     check(Weather.parse(Data("nope".utf8)) == nil, "garbage weather json")
     let night = Weather.parse(Data(#"{"current":{"temperature_2m":5,"weather_code":0,"is_day":0}}"#.utf8))
     check(night?.isDay == false && night?.feelsC == nil, "night, no optional fields")
-    check(Weather.describe(code: 0, isDay: true).label == "Clear" && Weather.describe(code: 0, isDay: false).symbol == "moon.stars", "clear day/night")
+    check(Weather.describe(code: 0, isDay: true).label == "Clear" && Weather.describe(code: 0, isDay: false).symbol == "moon.stars.fill", "clear day/night")
     check(Weather.describe(code: 63, isDay: true).label == "Rain", "rain code")
     check(Weather.formatTemp(20, unit: .fahrenheit) == "68°F" && Weather.formatTemp(21.4, unit: .celsius) == "21°C", "temperature format")
     check(Weather.formatTemp(-0.2, unit: .celsius) == "0°C", "negative zero")

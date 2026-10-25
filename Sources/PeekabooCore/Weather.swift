@@ -118,18 +118,18 @@ public enum Weather {
 
     // MARK: Presentation
 
-    /// SF Symbol name and label for a WMO weather code.
+    /// SF Symbol name (a filled variant, which can carry several colors) and label for a WMO weather code.
     public static func describe(code: Int, isDay: Bool) -> (symbol: String, label: String) {
         switch code {
-        case 0: return (isDay ? "sun.max" : "moon.stars", "Clear")
-        case 1, 2: return (isDay ? "cloud.sun" : "cloud.moon", "Partly cloudy")
-        case 3: return ("cloud", "Cloudy")
-        case 45, 48: return ("cloud.fog", "Fog")
-        case 51, 53, 55, 56, 57: return ("cloud.drizzle", "Drizzle")
-        case 61, 63, 65, 66, 67, 80, 81, 82: return ("cloud.rain", "Rain")
-        case 71, 73, 75, 77, 85, 86: return ("cloud.snow", "Snow")
-        case 95, 96, 99: return ("cloud.bolt.rain", "Thunderstorm")
-        default: return ("cloud", "Weather")
+        case 0: return (isDay ? "sun.max.fill" : "moon.stars.fill", "Clear")
+        case 1, 2: return (isDay ? "cloud.sun.fill" : "cloud.moon.fill", "Partly cloudy")
+        case 3: return ("cloud.fill", "Cloudy")
+        case 45, 48: return ("cloud.fog.fill", "Fog")
+        case 51, 53, 55, 56, 57: return ("cloud.drizzle.fill", "Drizzle")
+        case 61, 63, 65, 66, 67, 80, 81, 82: return ("cloud.rain.fill", "Rain")
+        case 71, 73, 75, 77, 85, 86: return ("cloud.snow.fill", "Snow")
+        case 95, 96, 99: return ("cloud.bolt.fill", "Thunderstorm")
+        default: return ("cloud.fill", "Weather")
         }
     }
 

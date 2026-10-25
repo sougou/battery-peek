@@ -51,6 +51,44 @@ private struct SectionLabel: View {
     }
 }
 
+/// A weather symbol with fixed, appearance-independent colors: yellow sun and moon, blue-gray
+/// clouds, blue rain, and so on. The layers of each symbol take the palette colors in order.
+struct WeatherIcon: View {
+    let symbol: String
+    let size: CGFloat
+
+    private static let cloud = Color(red: 0.62, green: 0.69, blue: 0.80)
+    private static let sun = Color(red: 1.0, green: 0.78, blue: 0.22)
+    private static let rain = Color(red: 0.25, green: 0.62, blue: 1.0)
+    private static let snow = Color(red: 0.62, green: 0.86, blue: 1.0)
+    private static let bolt = Color(red: 1.0, green: 0.82, blue: 0.2)
+
+    private var palette: [Color] {
+        switch symbol {
+        case "sun.max.fill": return [Self.sun]
+        case "moon.stars.fill": return [Self.sun, Color(red: 1.0, green: 0.92, blue: 0.62)]
+        case "cloud.sun.fill", "cloud.moon.fill": return [Self.cloud, Self.sun]
+        case "cloud.fog.fill": return [Self.cloud, Color(red: 0.5, green: 0.55, blue: 0.62)]
+        case "cloud.drizzle.fill", "cloud.rain.fill": return [Self.cloud, Self.rain]
+        case "cloud.snow.fill": return [Self.cloud, Self.snow]
+        case "cloud.bolt.fill": return [Self.cloud, Self.bolt]
+        default: return [Self.cloud]
+        }
+    }
+
+    var body: some View {
+        let colors = palette
+        let image = Image(systemName: symbol)
+            .symbolRenderingMode(.palette)
+            .font(.system(size: size))
+        switch colors.count {
+        case 1: image.foregroundStyle(colors[0])
+        case 2: image.foregroundStyle(colors[0], colors[1])
+        default: image.foregroundStyle(colors[0], colors[1], colors[2])
+        }
+    }
+}
+
 private struct WeatherPanel: View {
     let reading: WeatherReading
     let place: String?
@@ -79,9 +117,7 @@ private struct WeatherPanel: View {
                     .font(.system(size: 46, weight: .light, design: .monospaced))
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
-                Image(systemName: d.symbol)
-                    .symbolRenderingMode(.multicolor)
-                    .font(.system(size: 34))
+                WeatherIcon(symbol: d.symbol, size: 36)
             }
             Text(d.label)
                 .font(.system(size: 14, weight: .medium))
@@ -121,9 +157,7 @@ private struct HourStrip: View {
                             Text(Weather.formatHour(hour.time, utcOffsetSeconds: offset))
                                 .font(.system(size: 10, design: .monospaced))
                                 .foregroundStyle(.secondary)
-                            Image(systemName: Weather.describe(code: hour.code, isDay: hour.isDay).symbol)
-                                .symbolRenderingMode(.multicolor)
-                                .font(.system(size: 16))
+                            WeatherIcon(symbol: Weather.describe(code: hour.code, isDay: hour.isDay).symbol, size: 17)
                                 .frame(height: 20)
                             Text(Weather.formatTemp(hour.tempC, unit: unit).replacingOccurrences(of: "°\(unit.rawValue)", with: "°"))
                                 .font(.system(size: 13, design: .monospaced))

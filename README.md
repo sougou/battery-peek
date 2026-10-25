@@ -102,6 +102,7 @@ swift run hidpp-probe            # prints what the Logitech receiver reports, st
 .build/debug/Peekaboo --list     # what the popup would show (weather and batteries)
 .build/debug/Peekaboo --snapshot popup.png   # render the popup to a PNG
 .build/debug/Peekaboo --show 4               # show the popup for 4 seconds, then quit
+.build/debug/Peekaboo --snapshot-icons icons.png   # render every weather icon
 ```
 
 The command-line Swift tools don't include XCTest or the Swift Testing macros, so
