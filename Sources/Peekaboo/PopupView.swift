@@ -1,25 +1,99 @@
 import SwiftUI
 import PeekabooCore
 
+/// Weather on the left (when there is a reading), batteries on the right.
 struct PopupView: View {
+    @ObservedObject var store: BatteryStore
+    @ObservedObject var weather: WeatherStore
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 0) {
+            if let reading = weather.reading {
+                WeatherPanel(reading: reading, place: weather.placeName, unit: weather.unit)
+                    .frame(width: 210, alignment: .leading)
+                    .padding(.trailing, 20)
+                Divider()
+                    .padding(.trailing, 20)
+            }
+            BatteryList(store: store)
+                .frame(width: 360, alignment: .leading)
+        }
+        .padding(20)
+        .fixedSize()
+    }
+}
+
+private struct BatteryList: View {
     @ObservedObject var store: BatteryStore
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("BATTERIES")
-                .font(.system(size: 11, weight: .medium, design: .monospaced))
-                .tracking(1.6)
-                .foregroundStyle(.secondary)
+            SectionLabel("BATTERIES")
             if store.items.isEmpty {
-                Text("No batteries found")
-                    .foregroundStyle(.secondary)
+                Text("No batteries found").foregroundStyle(.secondary)
             }
             ForEach(store.items) { item in
                 Row(item: item)
             }
         }
-        .padding(20)
-        .frame(width: 400, alignment: .leading)
+    }
+}
+
+private struct SectionLabel: View {
+    let text: String
+    init(_ text: String) { self.text = text }
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 11, weight: .medium, design: .monospaced))
+            .tracking(1.6)
+            .foregroundStyle(.secondary)
+    }
+}
+
+private struct WeatherPanel: View {
+    let reading: WeatherReading
+    let place: String?
+    let unit: TempUnit
+
+    private var rows: [(String, String)] {
+        var rows: [(String, String)] = []
+        if let feels = reading.feelsC { rows.append(("Feels like", Weather.formatTemp(feels, unit: unit))) }
+        if let wind = reading.windKmh {
+            rows.append(("Wind", "\(Weather.formatWind(wind, unit: unit)) \(Weather.compass(reading.windDeg))"
+                .trimmingCharacters(in: .whitespaces)))
+        }
+        if let humidity = reading.humidity { rows.append(("Humidity", "\(Int(humidity.rounded()))%")) }
+        if let cloud = reading.cloud { rows.append(("Cloud cover", "\(Int(cloud.rounded()))%")) }
+        return rows
+    }
+
+    var body: some View {
+        let d = Weather.describe(code: reading.code, isDay: reading.isDay)
+        VStack(alignment: .leading, spacing: 8) {
+            SectionLabel(place?.uppercased() ?? "WEATHER")
+                .lineLimit(1)
+            Text(Weather.formatTemp(reading.tempC, unit: unit))
+                .font(.system(size: 46, weight: .light, design: .monospaced))
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
+            Label(d.label, systemImage: d.symbol)
+                .font(.system(size: 13))
+                .foregroundStyle(Color.accentColor)
+            Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 5) {
+                ForEach(rows, id: \.0) { row in
+                    GridRow {
+                        Text(row.0.uppercased())
+                            .font(.system(size: 10, design: .monospaced))
+                            .tracking(1)
+                            .foregroundStyle(.secondary)
+                        Text(row.1)
+                            .font(.system(size: 12, design: .monospaced))
+                    }
+                }
+            }
+            .padding(.top, 4)
+        }
     }
 }
 

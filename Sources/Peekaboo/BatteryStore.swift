@@ -31,8 +31,12 @@ final class BatteryStore: ObservableObject {
     }
 
     /// Re-reads the slow sources off the main thread when their caches are older than `maxAge`.
+    /// `completion` runs when a refresh finishes, or right away if nothing needed refreshing.
     func refreshSlow(maxAge: TimeInterval = 30, completion: (() -> Void)? = nil) {
+        var started = false
+        defer { if !started { completion?() } }
         if !profilerBusy, Date().timeIntervalSince(profilerAt) >= maxAge {
+            started = true
             profilerBusy = true
             DispatchQueue.global(qos: .utility).async { [weak self] in
                 let json = Bluetooth.profilerJSON()
@@ -46,6 +50,7 @@ final class BatteryStore: ObservableObject {
             }
         }
         if !logitechBusy, Date().timeIntervalSince(logitechAt) >= maxAge {
+            started = true
             logitechBusy = true
             // Own thread: HID++ replies are delivered through that thread's run loop.
             Thread.detachNewThread { [weak self] in

@@ -75,6 +75,39 @@ do {
     check(HIDPP.parseBatteryStatus([80, 70, 0])?.percent == 80, "legacy battery status")
 }
 
+// Weather parsing and formatting.
+do {
+    let json = """
+    {"current":{"temperature_2m":18.5,"apparent_temperature":17.6,"relative_humidity_2m":58,
+    "wind_speed_10m":14,"wind_direction_10m":300,"cloud_cover":25,"weather_code":1,"is_day":1}}
+    """
+    let r = Weather.parse(Data(json.utf8))
+    check(r?.tempC == 18.5 && r?.code == 1 && r?.isDay == true, "weather fields")
+    check(r?.feelsC == 17.6 && r?.humidity == 58 && r?.windKmh == 14 && r?.cloud == 25, "weather extras")
+    check(Weather.parse(Data(#"{"current":{"weather_code":1}}"#.utf8)) == nil, "missing temperature")
+    check(Weather.parse(Data("nope".utf8)) == nil, "garbage weather json")
+    let night = Weather.parse(Data(#"{"current":{"temperature_2m":5,"weather_code":0,"is_day":0}}"#.utf8))
+    check(night?.isDay == false && night?.feelsC == nil, "night, no optional fields")
+    check(Weather.describe(code: 0, isDay: true).label == "Clear" && Weather.describe(code: 0, isDay: false).symbol == "moon.stars", "clear day/night")
+    check(Weather.describe(code: 63, isDay: true).label == "Rain", "rain code")
+    check(Weather.formatTemp(20, unit: .fahrenheit) == "68°F" && Weather.formatTemp(21.4, unit: .celsius) == "21°C", "temperature format")
+    check(Weather.formatTemp(-0.2, unit: .celsius) == "0°C", "negative zero")
+    check(Weather.formatWind(19, unit: .celsius) == "19 km/h" && Weather.formatWind(19, unit: .fahrenheit) == "12 mph", "wind format")
+    check(Weather.compass(0) == "N" && Weather.compass(315) == "NW" && Weather.compass(359) == "N" && Weather.compass(-45) == "NW" && Weather.compass(nil) == "", "compass")
+    let url = Weather.url(for: Place(name: "x", latitude: 40.712812, longitude: -74.006015)).absoluteString
+    check(url.hasPrefix("https://api.open-meteo.com/") && url.contains("latitude=40.71&longitude=-74.01"), "rounded coordinates in the request")
+}
+
+// IP location parsing (providers differ in number vs string coordinates).
+do {
+    let ipwho = IPLocation.parse(Data(#"{"success":true,"latitude":37.3394,"longitude":-121.895,"city":"San Jose"}"#.utf8))
+    check(ipwho == Place(name: "San Jose", latitude: 37.3394, longitude: -121.895), "ipwho.is shape")
+    let geojs = IPLocation.parse(Data(#"{"latitude":"51.5","longitude":"-0.12","city":""}"#.utf8))
+    check(geojs == Place(name: "Current location", latitude: 51.5, longitude: -0.12), "geojs string coordinates, no city")
+    check(IPLocation.parse(Data(#"{"latitude":123,"longitude":0}"#.utf8)) == nil, "latitude out of range")
+    check(IPLocation.parse(Data(#"{"city":"x"}"#.utf8)) == nil, "no coordinates")
+}
+
 check(HotKeySpec.default.label == "⌃⌥B", "hotkey label")
 check(formatDuration(minutes: 45) == "45m", "short duration")
 check(formatDuration(minutes: 72) == "1h 12m", "long duration")

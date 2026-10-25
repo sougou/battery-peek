@@ -2,17 +2,20 @@ import AppKit
 import PeekabooCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private let settings = Config.load()
     private let store = BatteryStore()
-    private lazy var popup = PopupController(store: store)
+    private lazy var weather = WeatherStore(settings: settings)
+    private lazy var popup = PopupController(store: store, weather: weather)
     private var hotKey: HotKey?
     private var statusItem: NSStatusItem?
     private var spec = HotKeySpec.default
     private var timer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        spec = Config.hotKey()
+        spec = settings.hotKey
         store.refreshFast()
         store.refreshSlow(maxAge: 0)
+        weather.refresh()
 
         hotKey = HotKey(spec)
         if let hotKey {
@@ -27,11 +30,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // `Peekaboo --show 4`: show the popup for 4 seconds, then quit (for testing).
         let args = CommandLine.arguments
         if let at = args.firstIndex(of: "--show"), at + 1 < args.count, let secs = Double(args[at + 1]) {
-            store.refreshSlow(maxAge: 0) { [weak self] in self?.showPopup() }
+            store.refreshSlow(maxAge: 0) { [weak self] in self?.weather.refresh { self?.showPopup() } }
             DispatchQueue.main.asyncAfter(deadline: .now() + secs) { NSApp.terminate(nil) }
         }
         timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             self?.store.refreshSlow()
+            self?.weather.refresh() // only re-queries once its 30-minute cache is stale
         }
     }
 
@@ -39,6 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         store.refreshFast()
         popup.show()
         store.refreshSlow() // updates the open popup if the cache was stale
+        weather.refresh()
     }
 
     private func setUpStatusItem() {

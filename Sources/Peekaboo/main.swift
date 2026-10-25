@@ -6,15 +6,24 @@ let args = CommandLine.arguments
 
 // Debug helpers: `--list` prints what the popup would show; `--snapshot out.png` renders it.
 @MainActor func runDebug() {
+    let settings = Config.load()
     let store = BatteryStore()
+    let weather = WeatherStore(settings: settings)
     store.refreshAllNow()
+    weather.refreshNow()
     if args.contains("--list") {
+        if let r = weather.reading {
+            let d = Weather.describe(code: r.code, isDay: r.isDay)
+            print("\(weather.placeName ?? "weather")\t\(Weather.formatTemp(r.tempC, unit: weather.unit))\t\(d.label)")
+        } else {
+            print("(no weather)")
+        }
         for i in store.items {
             print("\(i.name)\t\(i.percent.map { "\($0)%" } ?? "-")\t\(i.note ?? "")")
         }
     }
     if let at = args.firstIndex(of: "--snapshot"), at + 1 < args.count {
-        let renderer = ImageRenderer(content: PopupView(store: store)
+        let renderer = ImageRenderer(content: PopupView(store: store, weather: weather)
             .background(Color(nsColor: .windowBackgroundColor)))
         renderer.scale = 2
         if let image = renderer.nsImage, let tiff = image.tiffRepresentation,

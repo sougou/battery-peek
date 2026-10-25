@@ -14,8 +14,8 @@ final class PopupController {
     private var cancellable: AnyCancellable?
     private var failsafe: Timer?
 
-    init(store: BatteryStore) {
-        hosting = NSHostingView(rootView: PopupView(store: store))
+    init(store: BatteryStore, weather: WeatherStore) {
+        hosting = NSHostingView(rootView: PopupView(store: store, weather: weather))
         hosting.translatesAutoresizingMaskIntoConstraints = false
 
         let blur = NSVisualEffectView()
@@ -33,7 +33,7 @@ final class PopupController {
             hosting.bottomAnchor.constraint(equalTo: blur.bottomAnchor),
         ])
 
-        panel = PopupPanel(contentRect: NSRect(x: 0, y: 0, width: 400, height: 120),
+        panel = PopupPanel(contentRect: NSRect(x: 0, y: 0, width: 400, height: 140),
                            styleMask: [.borderless, .nonactivatingPanel],
                            backing: .buffered, defer: false)
         panel.contentView = blur
@@ -47,7 +47,7 @@ final class PopupController {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
 
         // Resize when the list changes while the popup is up.
-        cancellable = store.objectWillChange.sink { [weak self] in
+        cancellable = store.objectWillChange.merge(with: weather.objectWillChange).sink { [weak self] in
             DispatchQueue.main.async { self?.layoutAndCenter() }
         }
     }
