@@ -8,6 +8,7 @@ final class BatteryStore: ObservableObject {
     @Published private(set) var items: [BatteryItem] = []
     private var profiler: Data?
     private var logitech: [BatteryItem] = []
+    private var recentLogitech = RecentItems()
     private var profilerAt = Date.distantPast
     private var logitechAt = Date.distantPast
     private var profilerBusy = false
@@ -58,8 +59,8 @@ final class BatteryStore: ObservableObject {
                 DispatchQueue.main.async {
                     guard let self else { return }
                     self.logitechBusy = false
-                    // Keep the last good reading if a sleeping device didn't answer this time.
-                    if !found.isEmpty || self.logitech.isEmpty { self.logitech = found }
+                    // A sleeping device can miss one read; keep its last reading for a few minutes.
+                    self.logitech = self.recentLogitech.update(found)
                     self.logitechAt = Date()
                     self.refreshFast()
                     completion?()

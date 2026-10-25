@@ -77,7 +77,8 @@ Restart the app after changing it (`killall Peekaboo`, then reopen it, or log ou
   app pings each of the six pairing slots, asks for the device name (feature `0x0005`)
   and battery (features `0x1004` or `0x1000`). All queries are read-only. A sleeping
   device can take a couple of seconds to answer, which is another reason this is cached.
-  It works alongside Logi Options+.
+  A device that misses a refresh keeps its last reading for 10 minutes, so it doesn't blink
+  out of the list. It works alongside Logi Options+.
 
 ## Privacy
 

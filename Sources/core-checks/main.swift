@@ -108,6 +108,22 @@ do {
     check(IPLocation.parse(Data(#"{"city":"x"}"#.utf8)) == nil, "no coordinates")
 }
 
+// RecentItems keeps a device that misses a read, for a while.
+do {
+    let t0 = Date(timeIntervalSince1970: 1_000_000)
+    let master = BatteryItem(id: "logi-MX Master 3S", name: "MX Master 3S", kind: .mouse, percent: 95)
+    let keys = BatteryItem(id: "logi-Solar", name: "Solar Keyboard", kind: .keyboard, percent: 100)
+    var recent = RecentItems()
+    check(recent.update([master, keys], now: t0).map(\.name) == ["MX Master 3S", "Solar Keyboard"], "first read")
+    let missed = recent.update([master], now: t0 + 60)
+    check(missed.map(\.name) == ["MX Master 3S", "Solar Keyboard"] && missed.last?.percent == 100, "a missed device is kept with its last reading")
+    var newer = master; newer.percent = 94
+    check(recent.update([newer], now: t0 + 120).first?.percent == 94, "newer reading replaces the old one")
+    check(recent.update([], now: t0 + 180).map(\.name) == ["MX Master 3S", "Solar Keyboard"], "an empty read keeps everything")
+    check(recent.update([newer], now: t0 + 700).map(\.name) == ["MX Master 3S"], "a device silent for over 10 minutes is dropped")
+    check(recent.update([keys], now: t0 + 710).map(\.name) == ["Solar Keyboard", "MX Master 3S"], "it comes back when it answers again")
+}
+
 check(HotKeySpec.default.label == "⌃⌥B", "hotkey label")
 check(formatDuration(minutes: 45) == "45m", "short duration")
 check(formatDuration(minutes: 72) == "1h 12m", "long duration")
