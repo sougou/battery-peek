@@ -1,5 +1,5 @@
 import AppKit
-import BatteryCore
+import PeekabooCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let store = BatteryStore()
@@ -19,12 +19,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             hotKey.onPress = { [weak self] in self?.showPopup() }
             hotKey.onRelease = { [weak self] in self?.popup.hide() }
         } else {
-            NSLog("battery-peek: could not register hotkey %@ (already taken?)", spec.label)
+            NSLog("peekaboo: could not register hotkey %@ (already taken?)", spec.label)
         }
 
         setUpStatusItem()
 
-        // `BatteryPeek --show 4`: show the popup for 4 seconds, then quit (for testing).
+        // `Peekaboo --show 4`: show the popup for 4 seconds, then quit (for testing).
         let args = CommandLine.arguments
         if let at = args.firstIndex(of: "--show"), at + 1 < args.count, let secs = Double(args[at + 1]) {
             store.refreshSlow(maxAge: 0) { [weak self] in self?.showPopup() }
@@ -43,7 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setUpStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "battery.100", accessibilityDescription: "Battery Peek")
+        item.button?.image = NSImage(systemSymbolName: "battery.100", accessibilityDescription: "Peekaboo")
         let menu = NSMenu()
         let hint = NSMenuItem(title: hotKey == nil ? "Hotkey unavailable" : "Hold \(spec.label) to peek",
                               action: nil, keyEquivalent: "")
@@ -51,7 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(hint)
         menu.addItem(NSMenuItem(title: "Show for 3 seconds", action: #selector(showBriefly), keyEquivalent: ""))
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit Battery Peek", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit Peekaboo", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         menu.items.forEach { if $0.action == #selector(showBriefly) { $0.target = self } }
         item.menu = menu
         statusItem = item

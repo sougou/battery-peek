@@ -1,8 +1,10 @@
-# Battery Peek
+# Peekaboo
 
-Hold a hotkey and a small popup shows the battery level of your Mac and the
-devices around it. Let go and it disappears. It's a menu bar app with no Dock
-icon and takes no focus, so the app you were typing in stays active.
+Hold a hotkey and a small popup shows live readouts: the battery level of your Mac and
+the devices around it. Let go and it disappears. It's a menu bar app with no Dock icon and
+takes no focus, so the app you were typing in stays active.
+
+(Peekaboo was called Battery Peek. The installer migrates an old install and your config.)
 
 It shows:
 
@@ -17,20 +19,24 @@ It shows:
 Needs macOS 13 or later and the Swift command-line tools (`xcode-select --install`).
 
 ```bash
-git clone https://github.com/sougou/battery-peek.git ~/code/battery-peek
-cd ~/code/battery-peek
+git clone https://github.com/sougou/peekaboo.git ~/code/peekaboo
+cd ~/code/peekaboo
 scripts/install.sh
 ```
 
-This builds the app, copies it to `~/Applications/BatteryPeek.app`, and starts it at
+This builds the app, copies it to `~/Applications/Peekaboo.app`, and starts it at
 login. Then hold **⌃⌥B** (Control + Option + B).
+
+If you had Battery Peek installed, the script stops and removes it, and copies your
+`~/.config/battery-peek/config.json` to `~/.config/peekaboo/config.json` so your hotkey
+carries over.
 
 Remove it with `scripts/uninstall.sh`. A battery icon in the menu bar offers
 "Show for 3 seconds" and "Quit".
 
 ### Change the hotkey
 
-Create `~/.config/battery-peek/config.json`:
+Create `~/.config/peekaboo/config.json`:
 
 ```json
 { "hotkey": "ctrl+opt+b" }
@@ -38,8 +44,8 @@ Create `~/.config/battery-peek/config.json`:
 
 Modifiers: `cmd`, `ctrl`, `opt` (or `alt`), `shift`. Keys: letters, digits, `space`,
 `f1`-`f20`. Function keys can be used alone, such as `"f16"`; letters, digits, and `space`
-need at least one modifier, or the hotkey would swallow your typing. Restart the app after changing it
-(`killall BatteryPeek`, then reopen it, or log out and in).
+need at least one modifier, or the hotkey would swallow your typing.
+Restart the app after changing it (`killall Peekaboo`, then reopen it, or log out and in).
 
 ## How it works
 
@@ -63,9 +69,9 @@ need at least one modifier, or the hotkey would swallow your typing. Restart the
 swift build
 swift run core-checks            # unit checks for parsing, HID++ framing, hotkeys
 swift run hidpp-probe            # prints what the Logitech receiver reports, step by step
-.build/debug/BatteryPeek --list  # what the popup would show
-.build/debug/BatteryPeek --snapshot popup.png   # render the popup to a PNG
-.build/debug/BatteryPeek --show 4               # show the popup for 4 seconds, then quit
+.build/debug/Peekaboo --list     # what the popup would show
+.build/debug/Peekaboo --snapshot popup.png   # render the popup to a PNG
+.build/debug/Peekaboo --show 4               # show the popup for 4 seconds, then quit
 ```
 
 The command-line Swift tools don't include XCTest or the Swift Testing macros, so

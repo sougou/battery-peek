@@ -1,21 +1,35 @@
 #!/bin/bash
 # Builds the app, installs it to ~/Applications, and starts it at login.
+# Also cleans up the old "Battery Peek" install (the app was renamed to Peekaboo).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-LABEL="dev.sougou.battery-peek"
-DEST="$HOME/Applications/BatteryPeek.app"
+LABEL="dev.sougou.peekaboo"
+DEST="$HOME/Applications/Peekaboo.app"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+OLD_LABEL="dev.sougou.battery-peek"
+OLD_DEST="$HOME/Applications/BatteryPeek.app"
+OLD_PLIST="$HOME/Library/LaunchAgents/$OLD_LABEL.plist"
 
 scripts/bundle.sh
 
-# Stop any running copy before replacing it.
+# Stop and remove the old Battery Peek and any running copy of this app.
+launchctl bootout "gui/$(id -u)/$OLD_LABEL" 2>/dev/null || true
 launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
 pkill -x BatteryPeek 2>/dev/null || true
+pkill -x Peekaboo 2>/dev/null || true
+rm -rf "$OLD_DEST" "$OLD_PLIST"
+
+# Carry the old config over (your hotkey) if there's no new one yet.
+if [ -f "$HOME/.config/battery-peek/config.json" ] && [ ! -f "$HOME/.config/peekaboo/config.json" ]; then
+  mkdir -p "$HOME/.config/peekaboo"
+  cp "$HOME/.config/battery-peek/config.json" "$HOME/.config/peekaboo/config.json"
+  echo "Copied your config to ~/.config/peekaboo/config.json"
+fi
 
 mkdir -p "$HOME/Applications" "$HOME/Library/LaunchAgents"
 rm -rf "$DEST"
-cp -R build/BatteryPeek.app "$DEST"
+cp -R build/Peekaboo.app "$DEST"
 
 cat > "$PLIST" <<PLISTEOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -23,7 +37,7 @@ cat > "$PLIST" <<PLISTEOF
 <plist version="1.0">
 <dict>
   <key>Label</key><string>$LABEL</string>
-  <key>ProgramArguments</key><array><string>$DEST/Contents/MacOS/BatteryPeek</string></array>
+  <key>ProgramArguments</key><array><string>$DEST/Contents/MacOS/Peekaboo</string></array>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><false/>
   <key>ProcessType</key><string>Interactive</string>
@@ -32,4 +46,4 @@ cat > "$PLIST" <<PLISTEOF
 PLISTEOF
 
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
-echo "Installed $DEST and started it. Hold the hotkey to peek: ctrl+opt+B by default, or set \"hotkey\" in ~/.config/battery-peek/config.json."
+echo "Installed $DEST and started it. Hold the hotkey to peek: ctrl+opt+B by default, or set \"hotkey\" in ~/.config/peekaboo/config.json."

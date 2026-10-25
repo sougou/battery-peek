@@ -1,5 +1,5 @@
 import Foundation
-import BatteryCore
+import PeekabooCore
 
 /// What the popup shows. Fast sources (this Mac, HID accessories) refresh on every
 /// show. Bluetooth profiles and Logitech receivers are slower, so they're cached and

@@ -1,7 +1,7 @@
 // Prints what the Logitech receiver reports, step by step. For debugging.
 //
 //   swift run hidpp-probe
-import BatteryCore
+import PeekabooCore
 import Foundation
 
 setvbuf(stdout, nil, _IOLBF, 0)

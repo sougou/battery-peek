@@ -1,6 +1,6 @@
 import AppKit
 import SwiftUI
-import BatteryCore
+import PeekabooCore
 
 let args = CommandLine.arguments
 

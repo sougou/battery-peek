@@ -1,8 +1,11 @@
 #!/bin/bash
-# Stops Battery Peek and removes the app and its login item.
+# Stops Peekaboo and removes the app and its login item, including the old "Battery Peek" names.
 set -euo pipefail
-LABEL="dev.sougou.battery-peek"
-launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
+for LABEL in dev.sougou.peekaboo dev.sougou.battery-peek; do
+  launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
+  rm -f "$HOME/Library/LaunchAgents/$LABEL.plist"
+done
+pkill -x Peekaboo 2>/dev/null || true
 pkill -x BatteryPeek 2>/dev/null || true
-rm -rf "$HOME/Applications/BatteryPeek.app" "$HOME/Library/LaunchAgents/$LABEL.plist"
-echo "Removed Battery Peek."
+rm -rf "$HOME/Applications/Peekaboo.app" "$HOME/Applications/BatteryPeek.app"
+echo "Removed Peekaboo."

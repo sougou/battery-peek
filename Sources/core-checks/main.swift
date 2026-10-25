@@ -1,5 +1,5 @@
 import Foundation
-@testable import BatteryCore
+@testable import PeekabooCore
 
 var failures = 0
 var count = 0

@@ -1,5 +1,5 @@
 import Carbon
-import BatteryCore
+import PeekabooCore
 
 /// A global hotkey that reports key-down and key-up, via Carbon's hot key API.
 /// It needs no Accessibility or Input Monitoring permission.

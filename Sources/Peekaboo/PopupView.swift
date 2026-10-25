@@ -1,5 +1,5 @@
 import SwiftUI
-import BatteryCore
+import PeekabooCore
 
 struct PopupView: View {
     @ObservedObject var store: BatteryStore
