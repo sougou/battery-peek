@@ -21,7 +21,13 @@ public struct HotKeySpec: Equatable {
         "l": 37, "j": 38, "k": 40, "n": 45, "m": 46, "space": 49,
         "f1": 122, "f2": 120, "f3": 99, "f4": 118, "f5": 96, "f6": 97, "f7": 98, "f8": 100,
         "f9": 101, "f10": 109, "f11": 103, "f12": 111,
+        "f13": 105, "f14": 107, "f15": 113, "f16": 106, "f17": 64, "f18": 79, "f19": 80, "f20": 90,
     ]
+
+    static func isFunctionKey(_ name: String) -> Bool {
+        guard name.hasPrefix("f"), let n = Int(name.dropFirst()) else { return false }
+        return (1...20).contains(n)
+    }
 
     /// "⌃⌥B" style label for menus.
     public var label: String {
@@ -33,10 +39,12 @@ public struct HotKeySpec: Equatable {
         return s + (HotKeySpec.keys.first { $0.value == keyCode }?.key ?? "?").uppercased()
     }
 
-    /// Parses "ctrl+opt+b". Needs at least one modifier and exactly one key.
+    /// Parses "ctrl+opt+b" or "f16". Needs exactly one key. Letters, digits, and space also need
+    /// a modifier, or the hotkey would swallow ordinary typing; function keys can stand alone.
     public static func parse(_ text: String) -> HotKeySpec? {
         var mods: UInt32 = 0
         var key: UInt32?
+        var keyName = ""
         for part in text.lowercased().split(separator: "+").map({ $0.trimmingCharacters(in: .whitespaces) }) {
             switch part {
             case "cmd", "command": mods |= cmd
@@ -46,9 +54,10 @@ public struct HotKeySpec: Equatable {
             default:
                 guard key == nil, let code = keys[part] else { return nil }
                 key = code
+                keyName = part
             }
         }
-        guard let key, mods != 0 else { return nil }
+        guard let key, mods != 0 || isFunctionKey(keyName) else { return nil }
         return HotKeySpec(keyCode: key, modifiers: mods)
     }
 }

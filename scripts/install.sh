@@ -32,4 +32,4 @@ cat > "$PLIST" <<PLISTEOF
 PLISTEOF
 
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
-echo "Installed $DEST and started it. Hold ctrl+opt+B to peek (change it in ~/.config/battery-peek/config.json)."
+echo "Installed $DEST and started it. Hold the hotkey to peek: ctrl+opt+B by default, or set \"hotkey\" in ~/.config/battery-peek/config.json."

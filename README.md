@@ -36,8 +36,9 @@ Create `~/.config/battery-peek/config.json`:
 { "hotkey": "ctrl+opt+b" }
 ```
 
-Modifiers: `cmd`, `ctrl`, `opt` (or `alt`), `shift`. Keys: letters, digits, `space`, `f1`-`f12`.
-At least one modifier is required. Restart the app after changing it
+Modifiers: `cmd`, `ctrl`, `opt` (or `alt`), `shift`. Keys: letters, digits, `space`,
+`f1`-`f20`. Function keys can be used alone, such as `"f16"`; letters, digits, and `space`
+need at least one modifier, or the hotkey would swallow your typing. Restart the app after changing it
 (`killall BatteryPeek`, then reopen it, or log out and in).
 
 ## How it works
