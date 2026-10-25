@@ -1,0 +1,80 @@
+# Battery Peek
+
+Hold a hotkey and a small popup shows the battery level of your Mac and the
+devices around it. Let go and it disappears. It's a menu bar app with no Dock
+icon and takes no focus, so the app you were typing in stays active.
+
+It shows:
+
+- **This Mac**, with charging state and time remaining.
+- **Bluetooth devices**: AirPods (buds and case), Magic Keyboard, mouse, trackpad.
+- **Logitech devices on a Bolt or Unifying receiver**, read live over HID++, so
+  the levels match Logi Options+ (the mouse and keyboard you can't see over
+  Bluetooth).
+
+## Install
+
+Needs macOS 13 or later and the Swift command-line tools (`xcode-select --install`).
+
+```bash
+git clone https://github.com/sougou/battery-peek.git ~/code/battery-peek
+cd ~/code/battery-peek
+scripts/install.sh
+```
+
+This builds the app, copies it to `~/Applications/BatteryPeek.app`, and starts it at
+login. Then hold **⌃⌥B** (Control + Option + B).
+
+Remove it with `scripts/uninstall.sh`. A battery icon in the menu bar offers
+"Show for 3 seconds" and "Quit".
+
+### Change the hotkey
+
+Create `~/.config/battery-peek/config.json`:
+
+```json
+{ "hotkey": "ctrl+opt+b" }
+```
+
+Modifiers: `cmd`, `ctrl`, `opt` (or `alt`), `shift`. Keys: letters, digits, `space`, `f1`-`f12`.
+At least one modifier is required. Restart the app after changing it
+(`killall BatteryPeek`, then reopen it, or log out and in).
+
+## How it works
+
+- The hotkey uses Carbon's hot key API, which reports key-down and key-up and needs no
+  Accessibility or Input Monitoring permission.
+- The popup is a borderless, non-activating panel that ignores the mouse.
+- **Mac:** the power-source API (IOKit).
+- **Bluetooth:** `system_profiler` for connected devices and AirPods' left, right, and
+  case levels, plus `BatteryPercent` from the IORegistry for keyboards, mice, and
+  trackpads. Slow, so it's cached and refreshed every minute in the background.
+- **Logitech:** the receiver's vendor HID interface (usage page `0xFF00`) carries HID++
+  messages and never keystrokes, so reading it needs no Input Monitoring permission. The
+  app pings each of the six pairing slots, asks for the device name (feature `0x0005`)
+  and battery (features `0x1004` or `0x1000`). All queries are read-only. A sleeping
+  device can take a couple of seconds to answer, which is another reason this is cached.
+  It works alongside Logi Options+.
+
+## Development
+
+```bash
+swift build
+swift run core-checks            # unit checks for parsing, HID++ framing, hotkeys
+swift run hidpp-probe            # prints what the Logitech receiver reports, step by step
+.build/debug/BatteryPeek --list  # what the popup would show
+.build/debug/BatteryPeek --snapshot popup.png   # render the popup to a PNG
+.build/debug/BatteryPeek --show 4               # show the popup for 4 seconds, then quit
+```
+
+The command-line Swift tools don't include XCTest or the Swift Testing macros, so
+`core-checks` is a plain executable that exits non-zero on failure.
+
+## Limits
+
+- Logitech support covers HID++ 2.0 devices with the unified battery (`0x1004`) or battery
+  status (`0x1000`) feature. Older HID++ 1.0 devices, and devices on direct Bluetooth, aren't
+  read over HID++ (direct-Bluetooth ones show through the Bluetooth path when macOS reports
+  a level).
+- The app is signed ad hoc, so macOS may ask you to allow it again after you rebuild.
+- Tested on macOS 27 with an MX Master 3S and a Signature Slim Solar+ on a Bolt receiver.
